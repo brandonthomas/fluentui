@@ -104,6 +104,8 @@
       ],
       "@fluentui/react-card": ["packages/react-components/react-card/library/src/index.ts"],
       "@fluentui/react-card-stories": ["packages/react-components/react-card/stories/src/index.ts"],
+      "@fluentui/react-carousel": ["packages/react-components/react-carousel/library/src/index.ts"],
+      "@fluentui/react-carousel-stories": ["packages/react-components/react-carousel/stories/src/index.ts"],
       "@fluentui/react-checkbox": ["packages/react-components/react-checkbox/library/src/index.ts"],
       "@fluentui/react-checkbox-stories": ["packages/react-components/react-checkbox/stories/src/index.ts"],
       "@fluentui/react-color-picker-preview": [
@@ -257,10 +259,12 @@
       "@fluentui/react-virtualizer-stories": ["packages/react-components/react-virtualizer/stories/src/index.ts"],
       "@fluentui/recipes": ["packages/react-components/recipes/src/index.ts"],
       "@fluentui/theme-designer": ["packages/react-components/theme-designer/src/index.ts"],
+      "@fluentui/token-analyzer-preview": ["packages/react-components/token-analyzer-preview/library/src/index.ts"],
       "@fluentui/tokens": ["packages/tokens/src/index.ts"],
       "@fluentui/workspace-plugin": ["tools/workspace-plugin/src/index.ts"],
-      "@fluentui/react-carousel-stories": ["packages/react-components/react-carousel/stories/src/index.ts"],
-      "@fluentui/react-carousel": ["packages/react-components/react-carousel/library/src/index.ts"]
+      "@fluentui/token-analyzer-preview-stories": [
+        "packages/react-components/token-analyzer-preview/stories/src/index.ts"
+      ]
     }
   }
 }
