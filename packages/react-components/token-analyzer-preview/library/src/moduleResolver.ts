@@ -3,6 +3,18 @@ import * as path from 'path';
 import { Project, SourceFile } from 'ts-morph';
 import { log } from './debugUtils.js';
 
+// Create a wrapper around TypeScript APIs for easier mocking
+export const tsUtils = {
+  resolveModuleName: (
+    moduleName: string,
+    containingFile: string,
+    compilerOptions: ts.CompilerOptions,
+    host: ts.ModuleResolutionHost,
+  ) => ts.resolveModuleName(moduleName, containingFile, compilerOptions, host),
+
+  getFileSize: (filePath: string) => ts.sys.getFileSize?.(filePath),
+};
+
 // Cache for resolved module paths
 const modulePathCache = new Map<string, string | null>();
 
@@ -33,32 +45,58 @@ export function resolveModulePath(project: Project, moduleSpecifier: string, con
   }
 
   // For relative paths, try a simple path resolution first
-  // This is a basic alternative to the non-existent resolveSourceFileDependency
   if (moduleSpecifier.startsWith('.')) {
     try {
       const basePath = path.dirname(containingFile);
-
-      // Try with extensions
       const extensions = ['.ts', '.tsx', '.js', '.jsx', '.d.ts'];
-      for (const ext of extensions) {
-        const candidatePath = path.resolve(basePath, moduleSpecifier + ext);
+
+      // Check if the module specifier already has a valid extension
+      const hasExtension = extensions.some(ext => moduleSpecifier.endsWith(ext));
+
+      // 1. If it has an extension, try the exact path first
+      if (hasExtension) {
+        const exactPath = path.resolve(basePath, moduleSpecifier);
         try {
-          // Check if file exists
-          const stats = ts.sys.getFileSize?.(candidatePath);
+          const stats = tsUtils.getFileSize(exactPath);
           if (stats !== undefined) {
-            modulePathCache.set(cacheKey, candidatePath);
-            return candidatePath;
+            modulePathCache.set(cacheKey, exactPath);
+            return exactPath;
           }
         } catch (e) {
-          // Continue to next extension
+          // If exact path fails, continue to extension-adding logic
         }
       }
 
-      // Try as directory with index file
+      // 2. Try with added extensions (for paths without extension or if exact path failed)
+      if (!hasExtension) {
+        for (const ext of extensions) {
+          const candidatePath = path.resolve(basePath, moduleSpecifier + ext);
+          try {
+            // Check if file exists
+            const stats = tsUtils.getFileSize(candidatePath);
+            if (stats !== undefined) {
+              modulePathCache.set(cacheKey, candidatePath);
+              return candidatePath;
+            }
+          } catch (e) {
+            // Continue to next extension
+          }
+        }
+      }
+
+      // 3. Try as directory with index file
+      const dirPath = hasExtension
+        ? path.resolve(
+            basePath,
+            path.dirname(moduleSpecifier),
+            path.basename(moduleSpecifier, path.extname(moduleSpecifier)),
+          )
+        : path.resolve(basePath, moduleSpecifier);
+
       for (const ext of extensions) {
-        const candidatePath = path.resolve(basePath, moduleSpecifier, 'index' + ext);
+        const candidatePath = path.resolve(dirPath, 'index' + ext);
         try {
-          const stats = ts.sys.getFileSize?.(candidatePath);
+          const stats = tsUtils.getFileSize(candidatePath);
           if (stats !== undefined) {
             modulePathCache.set(cacheKey, candidatePath);
             return candidatePath;
@@ -73,7 +111,7 @@ export function resolveModulePath(project: Project, moduleSpecifier: string, con
   }
 
   // Use TypeScript's module resolution API
-  const result = ts.resolveModuleName(
+  const result = tsUtils.resolveModuleName(
     moduleSpecifier,
     containingFile,
     project.getCompilerOptions() as ts.CompilerOptions,

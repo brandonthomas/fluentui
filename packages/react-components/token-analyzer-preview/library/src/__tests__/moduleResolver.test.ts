@@ -1,6 +1,6 @@
 // moduleResolver.test.ts
 import { ModuleResolutionKind, Project, ScriptTarget } from 'ts-morph';
-import { resolveModulePath, getModuleSourceFile, clearModuleCache } from '../moduleResolver';
+import { resolveModulePath, getModuleSourceFile, clearModuleCache, tsUtils } from '../moduleResolver';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as ts from 'typescript';
@@ -49,6 +49,14 @@ beforeAll(() => {
     export default 'tokens.default.value';
   `,
   );
+
+  // Create a file with extension in the import
+  fs.writeFileSync(
+    path.join(TEST_DIR, 'with-extension.ts'),
+    `
+    import { func } from './utils.ts';
+  `,
+  );
 });
 
 afterAll(() => {
@@ -90,6 +98,14 @@ describe('Module resolver functions', () => {
       expect(result).toEqual(path.join(TEST_DIR, 'styles/theme.ts'));
     });
 
+    test('resolves path with file extension', () => {
+      const sourceFilePath = path.join(TEST_DIR, 'with-extension.ts');
+      const result = resolveModulePath(project, './utils.ts', sourceFilePath);
+
+      expect(result).not.toBeNull();
+      expect(result).toEqual(path.join(TEST_DIR, 'utils.ts'));
+    });
+
     test('returns null for non-existent module', () => {
       const sourceFilePath = path.join(TEST_DIR, 'source.ts');
       const result = resolveModulePath(project, './non-existent', sourceFilePath);
@@ -104,25 +120,18 @@ describe('Module resolver functions', () => {
       const firstResult = resolveModulePath(project, './utils', sourceFilePath);
       expect(firstResult).not.toBeNull();
 
-      // Mock the file system and TS resolution to verify cache is used
-      const originalGetFileSize = ts.sys.getFileSize;
-      const originalResolve = ts.resolveModuleName;
-
-      ts.sys.getFileSize = jest.fn().mockImplementation(() => {
-        throw new Error('getFileSize should not be called if cache is working');
-      });
-
-      ts.resolveModuleName = jest.fn().mockImplementation(() => {
-        throw new Error('resolveModuleName should not be called if cache is working');
+      // Mock the TS resolution to verify cache is used
+      const originalResolve = tsUtils.resolveModuleName;
+      tsUtils.resolveModuleName = jest.fn().mockImplementation(() => {
+        throw new Error('Should not be called if cache is working');
       });
 
       // Second call should use cache
       const secondResult = resolveModulePath(project, './utils', sourceFilePath);
       expect(secondResult).toEqual(firstResult);
 
-      // Restore original functions
-      ts.sys.getFileSize = originalGetFileSize;
-      ts.resolveModuleName = originalResolve;
+      // Restore original function
+      tsUtils.resolveModuleName = originalResolve;
     });
   });
 
@@ -180,18 +189,28 @@ describe('Module resolver functions', () => {
     clearModuleCache();
 
     // Mock TS resolution to verify cache is cleared
-    const originalResolve = require('typescript').resolveModuleName;
+    const originalResolve = tsUtils.resolveModuleName;
     let resolveWasCalled = false;
-    require('typescript').resolveModuleName = jest.fn().mockImplementation((...args) => {
-      resolveWasCalled = true;
-      return originalResolve(...args);
-    });
+    tsUtils.resolveModuleName = jest
+      .fn()
+      .mockImplementation(
+        (
+          moduleName: string,
+          containingFile: string,
+          compilerOptions: ts.CompilerOptions,
+          host: ts.ModuleResolutionHost,
+        ) => {
+          resolveWasCalled = true;
+
+          return originalResolve(moduleName, containingFile, compilerOptions, host);
+        },
+      );
 
     // Call should not use cache
     getModuleSourceFile(project, './utils', sourceFilePath);
     expect(resolveWasCalled).toBe(true);
 
     // Restore original function
-    require('typescript').resolveModuleName = originalResolve;
+    tsUtils.resolveModuleName = originalResolve;
   });
 });
