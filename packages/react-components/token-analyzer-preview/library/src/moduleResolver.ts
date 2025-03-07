@@ -1,5 +1,7 @@
+// moduleResolver.ts
 import * as ts from 'typescript';
 import * as path from 'path';
+import * as fs from 'fs';
 import { Project, SourceFile } from 'ts-morph';
 import { log } from './debugUtils.js';
 
@@ -13,19 +15,42 @@ export const tsUtils = {
   ) => ts.resolveModuleName(moduleName, containingFile, compilerOptions, host),
 
   getFileSize: (filePath: string) => ts.sys.getFileSize?.(filePath),
+
+  fileExists: (filePath: string) => ts.sys.fileExists(filePath),
 };
 
 // Cache for resolved module paths
-const modulePathCache = new Map<string, string | null>();
+export const modulePathCache = new Map<string, string | null>();
 
 // Cache for resolved source files
-const resolvedFilesCache = new Map<string, SourceFile>();
+export const resolvedFilesCache = new Map<string, SourceFile>();
 
 /**
  * Creates a cache key for module resolution
  */
 function createCacheKey(moduleSpecifier: string, containingFile: string): string {
   return `${containingFile}:${moduleSpecifier}`;
+}
+
+/**
+ * Verifies a resolved file path actually exists
+ */
+function verifyFileExists(filePath: string | undefined | null): boolean {
+  if (!filePath) {
+    return false;
+  }
+
+  try {
+    // Use TypeScript's file system abstraction for testing compatibility
+    return tsUtils.fileExists(filePath);
+  } catch (e) {
+    // If that fails, try Node's fs as fallback
+    try {
+      return fs.existsSync(filePath);
+    } catch (nestedE) {
+      return false;
+    }
+  }
 }
 
 /**
@@ -41,6 +66,7 @@ export function resolveModulePath(project: Project, moduleSpecifier: string, con
 
   // Check cache first
   if (modulePathCache.has(cacheKey)) {
+    log("=========================this shouldn't be called");
     return modulePathCache.get(cacheKey)!;
   }
 
@@ -56,14 +82,9 @@ export function resolveModulePath(project: Project, moduleSpecifier: string, con
       // 1. If it has an extension, try the exact path first
       if (hasExtension) {
         const exactPath = path.resolve(basePath, moduleSpecifier);
-        try {
-          const stats = tsUtils.getFileSize(exactPath);
-          if (stats !== undefined) {
-            modulePathCache.set(cacheKey, exactPath);
-            return exactPath;
-          }
-        } catch (e) {
-          // If exact path fails, continue to extension-adding logic
+        if (verifyFileExists(exactPath)) {
+          modulePathCache.set(cacheKey, exactPath);
+          return exactPath;
         }
       }
 
@@ -71,15 +92,9 @@ export function resolveModulePath(project: Project, moduleSpecifier: string, con
       if (!hasExtension) {
         for (const ext of extensions) {
           const candidatePath = path.resolve(basePath, moduleSpecifier + ext);
-          try {
-            // Check if file exists
-            const stats = tsUtils.getFileSize(candidatePath);
-            if (stats !== undefined) {
-              modulePathCache.set(cacheKey, candidatePath);
-              return candidatePath;
-            }
-          } catch (e) {
-            // Continue to next extension
+          if (verifyFileExists(candidatePath)) {
+            modulePathCache.set(cacheKey, candidatePath);
+            return candidatePath;
           }
         }
       }
@@ -95,14 +110,9 @@ export function resolveModulePath(project: Project, moduleSpecifier: string, con
 
       for (const ext of extensions) {
         const candidatePath = path.resolve(dirPath, 'index' + ext);
-        try {
-          const stats = tsUtils.getFileSize(candidatePath);
-          if (stats !== undefined) {
-            modulePathCache.set(cacheKey, candidatePath);
-            return candidatePath;
-          }
-        } catch (e) {
-          // Continue to next extension
+        if (verifyFileExists(candidatePath)) {
+          modulePathCache.set(cacheKey, candidatePath);
+          return candidatePath;
         }
       }
     } catch (e) {
@@ -118,14 +128,19 @@ export function resolveModulePath(project: Project, moduleSpecifier: string, con
     ts.sys,
   );
 
-  // Cache and return the result
+  // Validate and cache the result
   if (result.resolvedModule) {
     const resolvedPath = result.resolvedModule.resolvedFileName;
-    modulePathCache.set(cacheKey, resolvedPath);
-    return resolvedPath;
+
+    // Verify the file actually exists
+    if (verifyFileExists(resolvedPath)) {
+      modulePathCache.set(cacheKey, resolvedPath);
+      return resolvedPath;
+    }
   }
 
   // Cache negative result
+  log(`Could not resolve module: ${moduleSpecifier} from ${containingFile}`);
   modulePathCache.set(cacheKey, null);
   return null;
 }
@@ -185,3 +200,6 @@ export function clearModuleCache(): void {
   modulePathCache.clear();
   resolvedFilesCache.clear();
 }
+
+// Export for testing
+export { verifyFileExists };

@@ -1,9 +1,17 @@
 // moduleResolver.test.ts
 import { ModuleResolutionKind, Project, ScriptTarget } from 'ts-morph';
-import { resolveModulePath, getModuleSourceFile, clearModuleCache, tsUtils } from '../moduleResolver';
+import {
+  resolveModulePath,
+  getModuleSourceFile,
+  clearModuleCache,
+  tsUtils,
+  modulePathCache,
+  resolvedFilesCache,
+} from '../moduleResolver';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as ts from 'typescript';
+import { log } from 'console';
 
 // Setup test directory and files
 const TEST_DIR = path.join(__dirname, 'test-module-resolver');
@@ -185,13 +193,16 @@ describe('Module resolver functions', () => {
     getModuleSourceFile(project, './utils', sourceFilePath);
     getModuleSourceFile(project, './styles/theme', sourceFilePath);
 
+    log(modulePathCache, resolvedFilesCache, '================before');
+
     // Clear caches
     clearModuleCache();
+    log(modulePathCache, resolvedFilesCache, '================after');
 
     // Mock TS resolution to verify cache is cleared
     const originalResolve = tsUtils.resolveModuleName;
     let resolveWasCalled = false;
-    tsUtils.resolveModuleName = jest
+    const mockedModuleResolve = jest
       .fn()
       .mockImplementation(
         (
@@ -200,14 +211,24 @@ describe('Module resolver functions', () => {
           compilerOptions: ts.CompilerOptions,
           host: ts.ModuleResolutionHost,
         ) => {
+          log("==============================================why isn't this hit");
           resolveWasCalled = true;
 
           return originalResolve(moduleName, containingFile, compilerOptions, host);
         },
       );
 
+    tsUtils.resolveModuleName = mockedModuleResolve;
+
+    log(
+      'is mocked call set properly',
+      tsUtils.resolveModuleName === mockedModuleResolve,
+      tsUtils.resolveModuleName === originalResolve,
+    );
+
     // Call should not use cache
     getModuleSourceFile(project, './utils', sourceFilePath);
+    log(modulePathCache, resolvedFilesCache, '================check cache');
     expect(resolveWasCalled).toBe(true);
 
     // Restore original function
