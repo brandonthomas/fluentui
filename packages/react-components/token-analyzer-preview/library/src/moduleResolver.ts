@@ -66,7 +66,6 @@ export function resolveModulePath(project: Project, moduleSpecifier: string, con
 
   // Check cache first
   if (modulePathCache.has(cacheKey)) {
-    log("=========================this shouldn't be called");
     return modulePathCache.get(cacheKey)!;
   }
 

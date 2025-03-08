@@ -10,8 +10,6 @@ import {
 } from '../moduleResolver';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as ts from 'typescript';
-import { log } from 'console';
 
 // Setup test directory and files
 const TEST_DIR = path.join(__dirname, 'test-module-resolver');
@@ -193,45 +191,15 @@ describe('Module resolver functions', () => {
     getModuleSourceFile(project, './utils', sourceFilePath);
     getModuleSourceFile(project, './styles/theme', sourceFilePath);
 
-    log(modulePathCache, resolvedFilesCache, '================before');
+    // Verify caches were filled
+    expect(modulePathCache.size).toBeGreaterThan(0);
+    expect(resolvedFilesCache.size).toBeGreaterThan(0);
 
     // Clear caches
     clearModuleCache();
-    log(modulePathCache, resolvedFilesCache, '================after');
 
-    // Mock TS resolution to verify cache is cleared
-    const originalResolve = tsUtils.resolveModuleName;
-    let resolveWasCalled = false;
-    const mockedModuleResolve = jest
-      .fn()
-      .mockImplementation(
-        (
-          moduleName: string,
-          containingFile: string,
-          compilerOptions: ts.CompilerOptions,
-          host: ts.ModuleResolutionHost,
-        ) => {
-          log("==============================================why isn't this hit");
-          resolveWasCalled = true;
-
-          return originalResolve(moduleName, containingFile, compilerOptions, host);
-        },
-      );
-
-    tsUtils.resolveModuleName = mockedModuleResolve;
-
-    log(
-      'is mocked call set properly',
-      tsUtils.resolveModuleName === mockedModuleResolve,
-      tsUtils.resolveModuleName === originalResolve,
-    );
-
-    // Call should not use cache
-    getModuleSourceFile(project, './utils', sourceFilePath);
-    log(modulePathCache, resolvedFilesCache, '================check cache');
-    expect(resolveWasCalled).toBe(true);
-
-    // Restore original function
-    tsUtils.resolveModuleName = originalResolve;
+    // Directly verify caches are empty
+    expect(modulePathCache.size).toBe(0);
+    expect(resolvedFilesCache.size).toBe(0);
   });
 });
