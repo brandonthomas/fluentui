@@ -11,6 +11,7 @@ import {
   StyleTokens,
 } from './types.js';
 import { log, measure, measureAsync } from './debugUtils.js';
+import { analyzeImports, processImportedStringTokens, ImportedValue } from './importAnalyzer.js';
 
 const makeResetStylesToken = 'resetStyles';
 
@@ -29,8 +30,16 @@ interface VariableMapping {
  * Process a style property to extract token references.
  * Property names are derived from the actual CSS property in the path,
  * not the object key containing them.
+ *
+ * @param prop The property assignment to process
+ * @param importedValues Map of imported values for resolving token references
+ * @param isResetStyles Whether this is a reset styles property
  */
-function processStyleProperty(prop: PropertyAssignment, isResetStyles?: Boolean): TokenReference[] {
+function processStyleProperty(
+  prop: PropertyAssignment,
+  importedValues: Map<string, ImportedValue> | undefined = undefined,
+  isResetStyles?: Boolean,
+): TokenReference[] {
   const tokens: TokenReference[] = [];
   const parentName = prop.getName();
 
@@ -44,8 +53,8 @@ function processStyleProperty(prop: PropertyAssignment, isResetStyles?: Boolean)
       path.push(parentName);
     }
 
-    if (Node.isStringLiteral(node) || Node.isIdentifier(node)) {
-      const text = node.getText();
+    if (Node.isStringLiteral(node)) {
+      const text = node.getText().replace(/['"]/g, ''); // Remove quotes
       const matches = text.match(TOKEN_REGEX);
       if (matches) {
         matches.forEach(match => {
@@ -55,6 +64,32 @@ function processStyleProperty(prop: PropertyAssignment, isResetStyles?: Boolean)
             path,
           });
         });
+      }
+    } else if (Node.isIdentifier(node)) {
+      const text = node.getText();
+
+      // First check if it matches the token regex directly
+      const matches = text.match(TOKEN_REGEX);
+      if (matches) {
+        matches.forEach(match => {
+          tokens.push({
+            property: path[path.length - 1] || parentName,
+            token: match,
+            path,
+          });
+        });
+      }
+
+      // Then check if it's an imported value reference
+      if (importedValues && importedValues.has(text)) {
+        const importTokens = processImportedStringTokens(
+          importedValues,
+          path[path.length - 1] || parentName,
+          text,
+          path,
+          TOKEN_REGEX,
+        );
+        tokens.push(...importTokens);
       }
     } else if (Node.isPropertyAccessExpression(node)) {
       const text = node.getText();
@@ -100,7 +135,6 @@ function processStyleProperty(prop: PropertyAssignment, isResetStyles?: Boolean)
         passedTokens.getProperties().forEach(property => {
           if (Node.isPropertyAssignment(property)) {
             const childName = property.getName();
-            console.log('Get child name:', childName);
             processNode(property.getInitializer(), [...path, nestedModifier, childName]);
           }
         });
@@ -128,6 +162,7 @@ function processStyleProperty(prop: PropertyAssignment, isResetStyles?: Boolean)
 
   return tokens;
 }
+
 /**
  * Analyzes mergeClasses calls to determine style relationships
  */
@@ -264,7 +299,10 @@ function createMetadata(styleMappings: StyleMapping[]): StyleMetadata {
 /**
  * Analyzes makeStyles calls to get token usage and structure
  */
-async function analyzeMakeStyles(sourceFile: SourceFile): Promise<StyleAnalysis> {
+async function analyzeMakeStyles(
+  sourceFile: SourceFile,
+  importedValues: Map<string, ImportedValue> | undefined = undefined,
+): Promise<StyleAnalysis> {
   const analysis: StyleAnalysis = {};
 
   sourceFile.forEachDescendant(node => {
@@ -276,7 +314,7 @@ async function analyzeMakeStyles(sourceFile: SourceFile): Promise<StyleAnalysis>
         stylesArg.getProperties().forEach(prop => {
           if (Node.isPropertyAssignment(prop)) {
             const styleName = prop.getName();
-            const tokens = processStyleProperty(prop);
+            const tokens = processStyleProperty(prop, importedValues);
             const functionName = parentNode.getName();
             if (!analysis[functionName]) {
               analysis[functionName] = {};
@@ -306,7 +344,7 @@ async function analyzeMakeStyles(sourceFile: SourceFile): Promise<StyleAnalysis>
           // Process the styles object
           stylesArg.getProperties().forEach(prop => {
             if (Node.isPropertyAssignment(prop)) {
-              const tokens = processStyleProperty(prop, true);
+              const tokens = processStyleProperty(prop, importedValues, true);
               if (tokens.length) {
                 const styleContent = createStyleContent(tokens);
                 analysis[functionName][makeResetStylesToken].tokens = analysis[functionName][
@@ -359,18 +397,24 @@ async function analyzeMakeStyles(sourceFile: SourceFile): Promise<StyleAnalysis>
 }
 
 /**
- * Combines mergeClasses and makeStyles analysis
+ * Combines mergeClasses and makeStyles analysis, with import resolution
  */
 async function analyzeFile(filePath: string, project: Project): Promise<FileAnalysis> {
   log(`Analyzing ${filePath}`);
 
   const sourceFile = project.addSourceFileAtPath(filePath);
 
-  // First pass: Analyze mergeClasses
+  // First analyze imports to find imported string values
+  log('Analyzing imports to find imported token values');
+  const importedValues = await measureAsync('analyze imports', () => analyzeImports(sourceFile, project));
+
+  // Second pass: Analyze mergeClasses
   const styleMappings = measure('analyze mergeClasses', () => analyzeMergeClasses(sourceFile));
 
-  // Second pass: Analyze makeStyles
-  const styleAnalysis = await measureAsync<StyleAnalysis>('analyze makeStyles', () => analyzeMakeStyles(sourceFile));
+  // Third pass: Analyze makeStyles with imported values
+  const styleAnalysis = await measureAsync<StyleAnalysis>('analyze makeStyles', () =>
+    analyzeMakeStyles(sourceFile, importedValues),
+  );
 
   // Create enhanced analysis with separated styles and metadata
   return {

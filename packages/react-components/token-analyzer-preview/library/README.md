@@ -17,6 +17,7 @@ A static analysis tool that scans your project's style files to track and analyz
 - ~~assignedSlots in output to track which slots classes are applied to~~
 - ~~Add variables full name to metadata (i.e. classNames.icon instead of just 'icon)~~
 - Module importing
+- Look at the path info again. Do we ever need it?
 
 ## Features
 
