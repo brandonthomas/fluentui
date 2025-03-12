@@ -123,7 +123,6 @@ describe('Type Checker Import Analysis', () => {
     project.addSourceFilesAtPaths([path.join(TEST_DIR, '**/*.ts')]);
 
     const importedValues: Map<string, ImportedValue> = await analyzeImports(sourceFile, project);
-    console.log(importedValues);
 
     // Verify standard re-export (Component)
     expect(importedValues.has('Component')).toBe(true);
