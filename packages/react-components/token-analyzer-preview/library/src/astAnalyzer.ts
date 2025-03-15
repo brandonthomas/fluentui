@@ -108,6 +108,8 @@ function processStyleProperty(
         }
       });
     } else if (Node.isCallExpression(node) && node.getExpression().getText() === 'createCustomFocusIndicatorStyle') {
+      // Special handling for createCustomFocusIndicatorStyle
+      // We can expand this to other functions as needed
       const focus = `:focus`;
       const focusWithin = `:focus-within`;
       let nestedModifier = focus;
