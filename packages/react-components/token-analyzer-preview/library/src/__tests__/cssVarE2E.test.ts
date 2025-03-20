@@ -82,7 +82,7 @@ describe('CSS Variable Token Extraction E2E', () => {
 
   afterAll(async () => {
     // Clean up temp files
-    // await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true });
   });
 
   test('analyzes and extracts all token references from CSS variables', async () => {
