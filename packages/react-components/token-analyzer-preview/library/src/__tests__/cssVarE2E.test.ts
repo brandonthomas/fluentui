@@ -117,6 +117,7 @@ describe('CSS Variable Token Extraction E2E', () => {
     );
 
     // 3. Verify imported direct token
+    console.log(useStyles.importedToken.tokens);
     expect(useStyles.importedToken.tokens).toContainEqual(
       expect.objectContaining({
         property: 'color',

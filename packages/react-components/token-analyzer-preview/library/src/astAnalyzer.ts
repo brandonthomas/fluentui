@@ -12,6 +12,7 @@ import {
 } from './types.js';
 import { log, measure, measureAsync } from './debugUtils.js';
 import { analyzeImports, processImportedStringTokens, ImportedValue } from './importAnalyzer.js';
+import { extractTokensFromCssVars } from './cssVarTokenExtractor';
 
 const makeResetStylesToken = 'resetStyles';
 
@@ -53,8 +54,11 @@ function processStyleProperty(
       path.push(parentName);
     }
 
-    if (Node.isStringLiteral(node)) {
+    // Check for string literals or template expressions (string template literals)
+    if (Node.isStringLiteral(node) || Node.isTemplateExpression(node)) {
       const text = node.getText().replace(/['"]/g, ''); // Remove quotes
+
+      // Check for direct token references
       const matches = text.match(TOKEN_REGEX);
       if (matches) {
         matches.forEach(match => {
@@ -64,6 +68,12 @@ function processStyleProperty(
             path,
           });
         });
+      }
+
+      // Check for CSS var() syntax that might contain tokens
+      if (text.includes('var(')) {
+        const cssVarTokens = extractTokensFromCssVars(text, path[path.length - 1] || parentName, path, TOKEN_REGEX);
+        tokens.push(...cssVarTokens);
       }
     } else if (Node.isIdentifier(node)) {
       const text = node.getText();
@@ -108,8 +118,6 @@ function processStyleProperty(
         }
       });
     } else if (Node.isCallExpression(node) && node.getExpression().getText() === 'createCustomFocusIndicatorStyle') {
-      // Special handling for createCustomFocusIndicatorStyle
-      // We can expand this to other functions as needed
       const focus = `:focus`;
       const focusWithin = `:focus-within`;
       let nestedModifier = focus;
@@ -152,6 +160,19 @@ function processStyleProperty(
               processNode(property.getInitializer(), [...path, functionName, childName]);
             }
           });
+        }
+        // Check for string literals in function arguments that might contain CSS variables with tokens
+        if (Node.isStringLiteral(argument)) {
+          const text = argument.getText().replace(/['"]/g, '');
+          if (text.includes('var(')) {
+            const cssVarTokens = extractTokensFromCssVars(
+              text,
+              path[path.length - 1] || parentName,
+              [...path, functionName],
+              TOKEN_REGEX,
+            );
+            tokens.push(...cssVarTokens);
+          }
         }
       });
     }

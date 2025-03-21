@@ -3,6 +3,7 @@ import { Project, Node, SourceFile, ImportDeclaration, Symbol, TypeChecker, Synt
 import { log } from './debugUtils.js';
 import { TokenReference } from './types.js';
 import { getModuleSourceFile } from './moduleResolver.js';
+import { extractTokensFromCssVars } from './cssVarTokenExtractor.js';
 
 /**
  * Represents a value imported from another module
@@ -263,10 +264,10 @@ function extractValueFromExpression(expression: Node | undefined): { value: stri
     };
   }
 
-  if (Node.isTemplateExpression(expression)) {
+  if (Node.isTemplateExpression(expression) || Node.isPropertyAccessExpression(expression)) {
     return {
       value: expression.getText(),
-      isLiteral: false,
+      isLiteral: Node.isTemplateExpression(expression),
     };
   }
 
@@ -297,15 +298,28 @@ export function processImportedStringTokens(
     const importedValue = importedValues.get(value)!;
 
     if (importedValue.isLiteral) {
-      // Process the imported literal for token references
+      // First, check for direct token references
       const matches = importedValue.value.match(TOKEN_REGEX);
-
       if (matches) {
         matches.forEach(match => {
           tokens.push({
             property: propertyName,
             token: match,
             path,
+            isVariableReference: true,
+            sourceFile: importedValue.sourceFile,
+          });
+        });
+      }
+
+      // Then check for CSS variable patterns that might contain tokens
+      if (importedValue.value.includes('var(')) {
+        const cssVarTokens = extractTokensFromCssVars(importedValue.value, propertyName, path, TOKEN_REGEX);
+
+        // Add CSS variable tokens with the source information
+        cssVarTokens.forEach(token => {
+          tokens.push({
+            ...token,
             isVariableReference: true,
             sourceFile: importedValue.sourceFile,
           });
