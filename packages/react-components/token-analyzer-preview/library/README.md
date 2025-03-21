@@ -18,6 +18,7 @@ A static analysis tool that scans your project's style files to track and analyz
 - ~~Add variables full name to metadata (i.e. classNames.icon instead of just 'icon)~~
 - ~~Module importing~~
 - Look at the path info again. Do we ever need it?
+- Convert token member within the analysis output to an array so we can hold multiple tokens. The order should be the order or priority. [0] being the highest pri with the last item in the array the least prioritized.
 
 ## Features
 
