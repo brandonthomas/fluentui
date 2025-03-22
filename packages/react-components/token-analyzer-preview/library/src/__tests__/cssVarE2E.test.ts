@@ -29,7 +29,7 @@ const useStyles = makeStyles({
   },
   // Nested CSS variable with token
   nestedCssVar: {
-    color: \`var(--primary, var(--secondary, \${tokens.colorBrandForeground2}))\`,
+    background: \`var(--primary, var(--secondary, \${tokens.colorBrandForeground2}))\`,
   },
   // Imported nested CSS variable with token
   importedNestedVar: {

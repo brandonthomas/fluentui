@@ -262,16 +262,12 @@ function extractValueFromExpression(expression: Node | undefined): { value: stri
       value: expression.getLiteralValue(),
       isLiteral: true,
     };
-  }
-
-  if (Node.isTemplateExpression(expression) || Node.isPropertyAccessExpression(expression)) {
+  } else if (Node.isTemplateExpression(expression) || Node.isPropertyAccessExpression(expression)) {
     return {
       value: expression.getText(),
       isLiteral: Node.isTemplateExpression(expression),
     };
-  }
-
-  if (Node.isNoSubstitutionTemplateLiteral(expression)) {
+  } else if (Node.isNoSubstitutionTemplateLiteral(expression)) {
     return {
       value: expression.getLiteralValue(),
       isLiteral: true,
@@ -298,6 +294,9 @@ export function processImportedStringTokens(
     const importedValue = importedValues.get(value)!;
 
     if (importedValue.isLiteral) {
+      console.log(`Processing literal value: ${importedValue.value}`);
+      // Process literal values (strings and template literals)
+
       // First, check for direct token references
       const matches = importedValue.value.match(TOKEN_REGEX);
       if (matches) {
@@ -310,16 +309,40 @@ export function processImportedStringTokens(
             sourceFile: importedValue.sourceFile,
           });
         });
-      }
-
-      // Then check for CSS variable patterns that might contain tokens
-      if (importedValue.value.includes('var(')) {
+      } else if (importedValue.value.includes('var(')) {
+        // Then check for CSS variable patterns that might contain tokens
         const cssVarTokens = extractTokensFromCssVars(importedValue.value, propertyName, path, TOKEN_REGEX);
 
         // Add CSS variable tokens with the source information
         cssVarTokens.forEach(token => {
           tokens.push({
             ...token,
+            isVariableReference: true,
+            sourceFile: importedValue.sourceFile,
+          });
+        });
+      }
+    } else {
+      // Process non-literal values (property access expressions, etc.)
+
+      // Check if the value directly matches the token pattern (tokens.someToken)
+      const matches = importedValue.value.match(TOKEN_REGEX);
+      if (importedValue.value.match(TOKEN_REGEX)) {
+        tokens.push({
+          property: propertyName,
+          token: importedValue.value,
+          path,
+          isVariableReference: true,
+          sourceFile: importedValue.sourceFile,
+        });
+      } else if (matches) {
+        // For template expressions, we might need to extract tokens from parts of the expression
+        // This is a simplified approach - might need enhancement for complex template expressions
+        matches.forEach(match => {
+          tokens.push({
+            property: propertyName,
+            token: match,
+            path,
             isVariableReference: true,
             sourceFile: importedValue.sourceFile,
           });
