@@ -705,205 +705,6 @@
       }
     }
   },
-  "library/src/components/MenuButton/useMenuButtonStyles.styles.ts": {
-    "styles": {
-      "useRootExpandedStyles": {
-        "outline": {
-          "tokens": [
-            {
-              "property": "color",
-              "token": "tokens.colorNeutralForeground1Selected",
-              "path": ["color"]
-            }
-          ],
-          "assignedVariables": ["rootExpandedStyles"]
-        },
-        "primary": {
-          "tokens": [
-            {
-              "property": "backgroundColor",
-              "token": "tokens.colorBrandBackgroundSelected",
-              "path": ["backgroundColor"]
-            }
-          ],
-          "assignedVariables": ["rootExpandedStyles"]
-        },
-        "secondary": {
-          "tokens": [
-            {
-              "property": "backgroundColor",
-              "token": "tokens.colorNeutralBackground1Selected",
-              "path": ["backgroundColor"]
-            },
-            {
-              "property": "color",
-              "token": "tokens.colorNeutralForeground1Selected",
-              "path": ["color"]
-            }
-          ],
-          "assignedVariables": ["rootExpandedStyles"]
-        },
-        "subtle": {
-          "tokens": [
-            {
-              "property": "backgroundColor",
-              "token": "tokens.colorSubtleBackgroundSelected",
-              "path": ["backgroundColor"]
-            },
-            {
-              "property": "color",
-              "token": "tokens.colorNeutralForeground2Selected",
-              "path": ["color"]
-            }
-          ],
-          "assignedVariables": ["rootExpandedStyles"]
-        },
-        "transparent": {
-          "tokens": [
-            {
-              "property": "backgroundColor",
-              "token": "tokens.colorTransparentBackgroundSelected",
-              "path": ["backgroundColor"]
-            },
-            {
-              "property": "color",
-              "token": "tokens.colorNeutralForeground2BrandSelected",
-              "path": ["color"]
-            }
-          ],
-          "assignedVariables": ["rootExpandedStyles"]
-        }
-      },
-      "useIconExpandedStyles": {
-        "outline": {
-          "tokens": [
-            {
-              "property": "color",
-              "token": "tokens.colorNeutralForeground1Selected",
-              "path": ["color"]
-            }
-          ],
-          "assignedVariables": ["iconExpandedStyles"]
-        },
-        "secondary": {
-          "tokens": [
-            {
-              "property": "color",
-              "token": "tokens.colorNeutralForeground1Selected",
-              "path": ["color"]
-            }
-          ],
-          "assignedVariables": ["iconExpandedStyles"]
-        },
-        "subtle": {
-          "tokens": [
-            {
-              "property": "color",
-              "token": "tokens.colorNeutralForeground2BrandSelected",
-              "path": ["color"]
-            }
-          ],
-          "assignedVariables": ["iconExpandedStyles"]
-        },
-        "transparent": {
-          "tokens": [
-            {
-              "property": "color",
-              "token": "tokens.colorNeutralForeground2BrandSelected",
-              "path": ["color"]
-            }
-          ],
-          "assignedVariables": ["iconExpandedStyles"]
-        }
-      },
-      "useMenuIconStyles": {
-        "small": {
-          "tokens": [
-            {
-              "property": "lineHeight",
-              "token": "tokens.lineHeightBase200",
-              "path": ["lineHeight"]
-            }
-          ],
-          "assignedVariables": ["menuIconStyles"]
-        },
-        "medium": {
-          "tokens": [
-            {
-              "property": "lineHeight",
-              "token": "tokens.lineHeightBase200",
-              "path": ["lineHeight"]
-            }
-          ],
-          "assignedVariables": ["menuIconStyles"]
-        },
-        "large": {
-          "tokens": [
-            {
-              "property": "lineHeight",
-              "token": "tokens.lineHeightBase400",
-              "path": ["lineHeight"]
-            }
-          ],
-          "assignedVariables": ["menuIconStyles"]
-        },
-        "notIconOnly": {
-          "tokens": [
-            {
-              "property": "marginLeft",
-              "token": "tokens.spacingHorizontalXS",
-              "path": ["marginLeft"]
-            }
-          ],
-          "assignedVariables": ["menuIconStyles"]
-        }
-      }
-    },
-    "metadata": {
-      "styleConditions": {
-        "menuButtonClassNames.root": {
-          "isBase": true,
-          "slotName": "root"
-        },
-        "state.root.className": {
-          "isBase": true,
-          "slotName": "root"
-        },
-        "rootExpandedStyles.base": {
-          "conditions": ["state.root['aria-expanded']"],
-          "slotName": "root"
-        },
-        "menuButtonClassNames.icon": {
-          "isBase": true,
-          "slotName": "icon"
-        },
-        "state.icon.className": {
-          "isBase": true,
-          "slotName": "icon"
-        },
-        "iconExpandedStyles.highContrast": {
-          "conditions": ["state.root['aria-expanded'] && iconExpandedStyles[state.appearance]"],
-          "slotName": "icon"
-        },
-        "menuButtonClassNames.menuIcon": {
-          "isBase": true,
-          "slotName": "menuIcon"
-        },
-        "menuIconStyles.base": {
-          "isBase": true,
-          "slotName": "menuIcon"
-        },
-        "state.menuIcon.className": {
-          "isBase": true,
-          "slotName": "menuIcon"
-        },
-        "menuIconStyles.notIconOnly": {
-          "conditions": ["!state.iconOnly"],
-          "slotName": "menuIcon"
-        }
-      }
-    }
-  },
   "library/src/components/CompoundButton/useCompoundButtonStyles.styles.ts": {
     "styles": {
       "useRootStyles": {
@@ -1335,6 +1136,205 @@
         "state.secondaryContent.className": {
           "isBase": true,
           "slotName": "secondaryContent"
+        }
+      }
+    }
+  },
+  "library/src/components/MenuButton/useMenuButtonStyles.styles.ts": {
+    "styles": {
+      "useRootExpandedStyles": {
+        "outline": {
+          "tokens": [
+            {
+              "property": "color",
+              "token": "tokens.colorNeutralForeground1Selected",
+              "path": ["color"]
+            }
+          ],
+          "assignedVariables": ["rootExpandedStyles"]
+        },
+        "primary": {
+          "tokens": [
+            {
+              "property": "backgroundColor",
+              "token": "tokens.colorBrandBackgroundSelected",
+              "path": ["backgroundColor"]
+            }
+          ],
+          "assignedVariables": ["rootExpandedStyles"]
+        },
+        "secondary": {
+          "tokens": [
+            {
+              "property": "backgroundColor",
+              "token": "tokens.colorNeutralBackground1Selected",
+              "path": ["backgroundColor"]
+            },
+            {
+              "property": "color",
+              "token": "tokens.colorNeutralForeground1Selected",
+              "path": ["color"]
+            }
+          ],
+          "assignedVariables": ["rootExpandedStyles"]
+        },
+        "subtle": {
+          "tokens": [
+            {
+              "property": "backgroundColor",
+              "token": "tokens.colorSubtleBackgroundSelected",
+              "path": ["backgroundColor"]
+            },
+            {
+              "property": "color",
+              "token": "tokens.colorNeutralForeground2Selected",
+              "path": ["color"]
+            }
+          ],
+          "assignedVariables": ["rootExpandedStyles"]
+        },
+        "transparent": {
+          "tokens": [
+            {
+              "property": "backgroundColor",
+              "token": "tokens.colorTransparentBackgroundSelected",
+              "path": ["backgroundColor"]
+            },
+            {
+              "property": "color",
+              "token": "tokens.colorNeutralForeground2BrandSelected",
+              "path": ["color"]
+            }
+          ],
+          "assignedVariables": ["rootExpandedStyles"]
+        }
+      },
+      "useIconExpandedStyles": {
+        "outline": {
+          "tokens": [
+            {
+              "property": "color",
+              "token": "tokens.colorNeutralForeground1Selected",
+              "path": ["color"]
+            }
+          ],
+          "assignedVariables": ["iconExpandedStyles"]
+        },
+        "secondary": {
+          "tokens": [
+            {
+              "property": "color",
+              "token": "tokens.colorNeutralForeground1Selected",
+              "path": ["color"]
+            }
+          ],
+          "assignedVariables": ["iconExpandedStyles"]
+        },
+        "subtle": {
+          "tokens": [
+            {
+              "property": "color",
+              "token": "tokens.colorNeutralForeground2BrandSelected",
+              "path": ["color"]
+            }
+          ],
+          "assignedVariables": ["iconExpandedStyles"]
+        },
+        "transparent": {
+          "tokens": [
+            {
+              "property": "color",
+              "token": "tokens.colorNeutralForeground2BrandSelected",
+              "path": ["color"]
+            }
+          ],
+          "assignedVariables": ["iconExpandedStyles"]
+        }
+      },
+      "useMenuIconStyles": {
+        "small": {
+          "tokens": [
+            {
+              "property": "lineHeight",
+              "token": "tokens.lineHeightBase200",
+              "path": ["lineHeight"]
+            }
+          ],
+          "assignedVariables": ["menuIconStyles"]
+        },
+        "medium": {
+          "tokens": [
+            {
+              "property": "lineHeight",
+              "token": "tokens.lineHeightBase200",
+              "path": ["lineHeight"]
+            }
+          ],
+          "assignedVariables": ["menuIconStyles"]
+        },
+        "large": {
+          "tokens": [
+            {
+              "property": "lineHeight",
+              "token": "tokens.lineHeightBase400",
+              "path": ["lineHeight"]
+            }
+          ],
+          "assignedVariables": ["menuIconStyles"]
+        },
+        "notIconOnly": {
+          "tokens": [
+            {
+              "property": "marginLeft",
+              "token": "tokens.spacingHorizontalXS",
+              "path": ["marginLeft"]
+            }
+          ],
+          "assignedVariables": ["menuIconStyles"]
+        }
+      }
+    },
+    "metadata": {
+      "styleConditions": {
+        "menuButtonClassNames.root": {
+          "isBase": true,
+          "slotName": "root"
+        },
+        "state.root.className": {
+          "isBase": true,
+          "slotName": "root"
+        },
+        "rootExpandedStyles.base": {
+          "conditions": ["state.root['aria-expanded']"],
+          "slotName": "root"
+        },
+        "menuButtonClassNames.icon": {
+          "isBase": true,
+          "slotName": "icon"
+        },
+        "state.icon.className": {
+          "isBase": true,
+          "slotName": "icon"
+        },
+        "iconExpandedStyles.highContrast": {
+          "conditions": ["state.root['aria-expanded'] && iconExpandedStyles[state.appearance]"],
+          "slotName": "icon"
+        },
+        "menuButtonClassNames.menuIcon": {
+          "isBase": true,
+          "slotName": "menuIcon"
+        },
+        "menuIconStyles.base": {
+          "isBase": true,
+          "slotName": "menuIcon"
+        },
+        "state.menuIcon.className": {
+          "isBase": true,
+          "slotName": "menuIcon"
+        },
+        "menuIconStyles.notIconOnly": {
+          "conditions": ["!state.iconOnly"],
+          "slotName": "menuIcon"
         }
       }
     }
