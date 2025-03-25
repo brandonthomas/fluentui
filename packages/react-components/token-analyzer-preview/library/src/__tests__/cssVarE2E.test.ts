@@ -195,19 +195,22 @@ describe('CSS Variable Cross-Module Resolution E2E', () => {
       // Base token definitions
       export const primaryToken = tokens.colorBrandPrimary;
       export const secondaryToken = tokens.colorBrandSecondary;
+      export const furtherMargin = tokens.spacingVerticalXXL;
       `,
     );
 
     await fs.writeFile(
       path.join(varsDir, 'variables.ts'),
       `
-      import { primaryToken, secondaryToken } from './colors';
+      import { primaryToken, secondaryToken, furtherMargin } from './colors';
       import { tokens } from '@fluentui/react-theme';
 
       // CSS Variables referencing tokens
       export const primaryVar = \`var(--primary, \${tokens.colorBrandPrimary})\`;
       export const nestedVar = \`var(--nested, var(--fallback, \${tokens.colorBrandSecondary}))\`;
-      export const multiTokenVar = \`var(--multi, \${tokens.colorBrandPrimary} \${tokens.colorBrandSecondary})\`;
+      export const multiTokenVar = \`var(--multi, \${primaryToken} \${tokens.colorBrandSecondary})\`;
+      export const someMargin = tokens.spacingHorizontalXXL;
+      export const someOtherMargin = furtherMargin;
       `,
     );
 
@@ -224,7 +227,7 @@ describe('CSS Variable Cross-Module Resolution E2E', () => {
       path.join(stylesDir, 'component.styles.ts'),
       `
       import { makeStyles } from '@griffel/react';
-      import { primaryToken, primaryVar, nestedVar, multiTokenVar } from '../tokens';
+      import { primaryToken, primaryVar, nestedVar, multiTokenVar, someMargin, someOtherMargin } from '../tokens';
 
       const useStyles = makeStyles({
         root: {
@@ -236,6 +239,10 @@ describe('CSS Variable Cross-Module Resolution E2E', () => {
           border: nestedVar,
           // Complex var with multiple tokens
           padding: multiTokenVar,
+          // aliased and imported CSS var
+          marginRight:someMargin,
+          // aliased and imported CSS var with another level of indirection
+          marginRight:someOtherMargin
         }
       });
 

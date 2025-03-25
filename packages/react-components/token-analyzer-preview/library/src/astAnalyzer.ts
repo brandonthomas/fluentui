@@ -431,6 +431,8 @@ async function analyzeFile(filePath: string, project: Project): Promise<FileAnal
   log('Analyzing imports to find imported token values');
   const importedValues = await measureAsync('analyze imports', () => analyzeImports(sourceFile, project));
 
+  console.log(importedValues);
+
   // Second pass: Analyze mergeClasses
   const styleMappings = measure('analyze mergeClasses', () => analyzeMergeClasses(sourceFile));
 

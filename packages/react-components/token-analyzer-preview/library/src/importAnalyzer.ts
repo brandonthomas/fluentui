@@ -224,7 +224,6 @@ function extractValueFromDeclaration(declaration: Node): { value: string; isLite
     const initializer = declaration.getInitializer();
     return extractValueFromExpression(initializer);
   }
-
   // Handle export assignments (export default "value")
   if (Node.isExportAssignment(declaration)) {
     const expression = declaration.getExpression();
@@ -257,12 +256,22 @@ function extractValueFromExpression(expression: Node | undefined): { value: stri
     return undefined;
   }
 
+  // we are looking for a variableDeclaration and we need to resolve these to their root if they have tokens in them recursively
+
   if (Node.isStringLiteral(expression)) {
     return {
       value: expression.getLiteralValue(),
       isLiteral: true,
     };
-  } else if (Node.isTemplateExpression(expression) || Node.isPropertyAccessExpression(expression)) {
+  } else if (Node.isTemplateExpression(expression)) {
+    // We need to process template expression spans and then if they are also themselves something like a template expression or variable declartion, resolve that recursively.
+    console.log(expression.getTemplateSpans().map(span => span.getText()));
+
+    return {
+      value: expression.getText(),
+      isLiteral: Node.isTemplateExpression(expression),
+    };
+  } else if (Node.isPropertyAccessExpression(expression)) {
     return {
       value: expression.getText(),
       isLiteral: Node.isTemplateExpression(expression),
