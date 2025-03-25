@@ -20,10 +20,13 @@ export function extractTokensFromCssVars(
 ): TokenReference[] {
   const tokens: TokenReference[] = [];
 
+  let testValue = value;
+
   // Direct token matches in the string
-  const directMatches = value.match(TOKEN_REGEX);
+  const directMatches = testValue.match(TOKEN_REGEX);
   if (directMatches) {
     directMatches.forEach(match => {
+      testValue = testValue.replace(match, ''); // Remove direct matches from the string
       tokens.push({
         property: propertyName,
         token: match,
@@ -32,11 +35,14 @@ export function extractTokensFromCssVars(
     });
   }
 
+  // we have an issue with duplicated calls. A direct match will match the whole string as would a token within a var part
+  // found by the regex, so we need to remove the direct matches from the string
+
   // Look for CSS var() patterns
   const varPattern = /var\s*\(\s*([^,)]*),?\s*(.*?)\s*\)/g;
   let match: RegExpExecArray | null;
 
-  while ((match = varPattern.exec(value)) !== null) {
+  while ((match = varPattern.exec(testValue)) !== null) {
     const fullMatch = match[0]; // The entire var(...) expression
     const varName = match[1]; // The CSS variable name
     const fallback = match[2]; // The fallback value, which might contain nested var() calls

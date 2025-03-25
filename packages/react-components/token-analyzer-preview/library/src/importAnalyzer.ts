@@ -294,7 +294,6 @@ export function processImportedStringTokens(
     const importedValue = importedValues.get(value)!;
 
     if (importedValue.isLiteral) {
-      console.log(`Processing literal value: ${importedValue.value}`);
       // Process literal values (strings and template literals)
 
       // First, check for direct token references

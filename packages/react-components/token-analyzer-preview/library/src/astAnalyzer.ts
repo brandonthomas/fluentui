@@ -58,22 +58,22 @@ function processStyleProperty(
     if (Node.isStringLiteral(node) || Node.isTemplateExpression(node)) {
       const text = node.getText().replace(/['"]/g, ''); // Remove quotes
 
-      // Check for direct token references
-      const matches = text.match(TOKEN_REGEX);
-      if (matches) {
-        matches.forEach(match => {
-          tokens.push({
-            property: path[path.length - 1] || parentName,
-            token: match,
-            path,
-          });
-        });
-      }
-
       // Check for CSS var() syntax that might contain tokens
       if (text.includes('var(')) {
         const cssVarTokens = extractTokensFromCssVars(text, path[path.length - 1] || parentName, path, TOKEN_REGEX);
         tokens.push(...cssVarTokens);
+      } else {
+        // Check for direct token references
+        const matches = text.match(TOKEN_REGEX);
+        if (matches) {
+          matches.forEach(match => {
+            tokens.push({
+              property: path[path.length - 1] || parentName,
+              token: match,
+              path,
+            });
+          });
+        }
       }
     } else if (Node.isIdentifier(node)) {
       const text = node.getText();

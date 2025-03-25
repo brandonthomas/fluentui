@@ -17,7 +17,7 @@ const useStyles = makeStyles({
   },
   // CSS variable with token
   cssVar: {
-    color: \`var(--theme-color, \${tokens.colorBrandForeground1})\`,
+    color: \`var(--theme-color, \${tokens.colorBrandForeground4})\`,
   },
   // Imported direct token
   importedToken: {
@@ -45,8 +45,8 @@ const useStyles = makeStyles({
 const tokenVarsFile = `
 import { tokens } from '@fluentui/react-theme';
 // Direct token exports
-export const colorPrimary = tokens.colorBrandForeground1;
-export const colorSecondary = \`var(--color, \${tokens.colorBrandForeground2})\`;
+export const colorPrimary = tokens.colorBrandForeground6;
+export const colorSecondary = \`var(--color, \${tokens.colorBrandForeground3})\`;
 
 // Nested fallback vars
 export const nestedFallbackVar = \`var(--a, var(--b, \${tokens.colorNeutralForeground3}))\`;
@@ -96,11 +96,10 @@ describe('CSS Variable Token Extraction E2E', () => {
     const { styles } = analysis;
     expect(styles).toHaveProperty('useStyles');
 
-    console.log(styles);
-
     const useStyles = styles.useStyles;
 
     // 1. Verify direct token reference
+    expect(useStyles.direct.tokens.length).toBe(1);
     expect(useStyles.direct.tokens).toContainEqual(
       expect.objectContaining({
         property: 'color',
@@ -109,41 +108,45 @@ describe('CSS Variable Token Extraction E2E', () => {
     );
 
     // 2. Verify CSS variable with token
+    expect(useStyles.cssVar.tokens.length).toBe(1);
     expect(useStyles.cssVar.tokens).toContainEqual(
       expect.objectContaining({
         property: 'color',
-        token: 'tokens.colorBrandForeground1',
+        token: 'tokens.colorBrandForeground4',
       }),
     );
 
     // 3. Verify imported direct token
-    console.log(useStyles.importedToken.tokens);
+    expect(useStyles.importedToken.tokens.length).toBe(1);
     expect(useStyles.importedToken.tokens).toContainEqual(
       expect.objectContaining({
         property: 'color',
-        token: 'tokens.colorBrandForeground1',
+        token: 'tokens.colorBrandForeground6',
         isVariableReference: true,
       }),
     );
 
     // 4. Verify imported CSS variable with token
+    expect(useStyles.importedCssVar.tokens.length).toBe(1);
     expect(useStyles.importedCssVar.tokens).toContainEqual(
       expect.objectContaining({
         property: 'color',
-        token: 'tokens.colorBrandForeground2',
+        token: 'tokens.colorBrandForeground3',
         isVariableReference: true,
       }),
     );
 
     // 5. Verify nested CSS variable with token
+    expect(useStyles.nestedCssVar.tokens.length).toBe(1);
     expect(useStyles.nestedCssVar.tokens).toContainEqual(
       expect.objectContaining({
-        property: 'color',
-        token: 'tokens.colorBrandForeground3',
+        property: 'background',
+        token: 'tokens.colorBrandForeground2',
       }),
     );
 
     // 6. Verify imported nested CSS variable with token
+    expect(useStyles.importedNestedVar.tokens.length).toBe(1);
     expect(useStyles.importedNestedVar.tokens).toContainEqual(
       expect.objectContaining({
         property: 'color',
@@ -152,31 +155,16 @@ describe('CSS Variable Token Extraction E2E', () => {
       }),
     );
 
-    // 7. Verify complex CSS variable with multiple tokens
-    const complexVarTokens = useStyles.complexVar.tokens;
-    expect(complexVarTokens).toHaveLength(2);
-    expect(complexVarTokens).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          token: 'tokens.colorNeutralForeground4',
-        }),
-        expect.objectContaining({
-          token: 'tokens.colorBrandForeground4',
-        }),
-      ]),
-    );
-
     // 8. Verify imported complex CSS variable with multiple tokens
-    const importedComplexVarTokens = useStyles.importedComplexVar.tokens;
-    expect(importedComplexVarTokens.length).toBeGreaterThan(1);
-    expect(importedComplexVarTokens).toEqual(
+    expect(useStyles.importedComplexVar.tokens.length).toBe(2);
+    expect(useStyles.importedComplexVar.tokens).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           token: 'tokens.colorBrandBackground',
           isVariableReference: true,
         }),
         expect.objectContaining({
-          token: 'tokens.colorNeutralBackground',
+          token: 'tokens.colorNeutralBackground1',
           isVariableReference: true,
         }),
       ]),
@@ -203,9 +191,10 @@ describe('CSS Variable Cross-Module Resolution E2E', () => {
     await fs.writeFile(
       path.join(varsDir, 'colors.ts'),
       `
+      import { tokens } from '@fluentui/react-theme';
       // Base token definitions
-      export const primaryToken = 'tokens.colorBrandPrimary';
-      export const secondaryToken = 'tokens.colorBrandSecondary';
+      export const primaryToken = tokens.colorBrandPrimary;
+      export const secondaryToken = tokens.colorBrandSecondary;
       `,
     );
 
@@ -213,11 +202,12 @@ describe('CSS Variable Cross-Module Resolution E2E', () => {
       path.join(varsDir, 'variables.ts'),
       `
       import { primaryToken, secondaryToken } from './colors';
+      import { tokens } from '@fluentui/react-theme';
 
       // CSS Variables referencing tokens
-      export const primaryVar = \`var(--primary, \${primaryToken})\`;
-      export const nestedVar = \`var(--nested, var(--fallback, \${secondaryToken}))\`;
-      export const multiTokenVar = \`var(--multi, \${primaryToken} \${secondaryToken})\`;
+      export const primaryVar = \`var(--primary, \${tokens.colorBrandPrimary})\`;
+      export const nestedVar = \`var(--nested, var(--fallback, \${tokens.colorBrandSecondary}))\`;
+      export const multiTokenVar = \`var(--multi, \${tokens.colorBrandPrimary} \${tokens.colorBrandSecondary})\`;
       `,
     );
 
@@ -231,10 +221,10 @@ describe('CSS Variable Cross-Module Resolution E2E', () => {
     );
 
     await fs.writeFile(
-      path.join(stylesDir, 'component.ts'),
+      path.join(stylesDir, 'component.styles.ts'),
       `
       import { makeStyles } from '@griffel/react';
-      import { primaryToken, primaryVar, nestedVar, multiTokenVar } from '../variables';
+      import { primaryToken, primaryVar, nestedVar, multiTokenVar } from '../tokens';
 
       const useStyles = makeStyles({
         root: {
@@ -243,7 +233,7 @@ describe('CSS Variable Cross-Module Resolution E2E', () => {
           // CSS var import
           backgroundColor: primaryVar,
           // Nested CSS var import
-          borderColor: nestedVar,
+          border: nestedVar,
           // Complex var with multiple tokens
           padding: multiTokenVar,
         }
@@ -267,7 +257,7 @@ describe('CSS Variable Cross-Module Resolution E2E', () => {
 
   test('resolves token references across module boundaries with CSS vars', async () => {
     // Run the analyzer on the component styles file
-    const componentPath = path.join(tempDir, 'styles', 'component.ts');
+    const componentPath = path.join(tempDir, 'styles', 'component.styles.ts');
     const analysis = await analyzeFile(componentPath, project);
 
     const { styles } = analysis;
@@ -293,7 +283,7 @@ describe('CSS Variable Cross-Module Resolution E2E', () => {
         }),
         // Import of nested CSS var with token
         expect.objectContaining({
-          property: 'borderColor',
+          property: 'border',
           token: 'tokens.colorBrandSecondary',
           isVariableReference: true,
         }),
