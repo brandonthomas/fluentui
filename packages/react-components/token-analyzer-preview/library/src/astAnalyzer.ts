@@ -12,7 +12,7 @@ import {
 } from './types.js';
 import { log, measure, measureAsync } from './debugUtils.js';
 import { analyzeImports, processImportedStringTokens, ImportedValue } from './importAnalyzer.js';
-import { extractTokensFromCssVars } from './cssVarTokenExtractor';
+import { extractTokensFromCssVars } from './cssVarTokenExtractor.js';
 
 const makeResetStylesToken = 'resetStyles';
 
