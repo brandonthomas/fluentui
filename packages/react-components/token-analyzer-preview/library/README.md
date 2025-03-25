@@ -20,6 +20,7 @@ A static analysis tool that scans your project's style files to track and analyz
 - Look at the path info again. Do we ever need it?
 - Convert token member within the analysis output to an array so we can hold multiple tokens. The order should be the order or priority. [0] being the highest pri with the last item in the array the least prioritized.
 - **This is high pri now since we have components in source using this technique (see buttonstyles.styles.ts)** Handle very complex cases like `var(--optional-token, var(--semantic-token, ${some-other-var-with-a-string-or-fallback}))`. This other var might be in another package or file as well. Currently we won't handle this level of depth but we could do symbol extraction in the future if needed to resolve the chain fully. This will likely require changes in importAnalyzer.ts and structural changes in the data we return. On top of needing to find referenced symbols within an aliased template string literal, we might also then need to parse out var fallbacks within short hands. IE: `padding: 'var(--first, var(--second)) 10px` and ensure the ordering is correct.
+- Format output with prettier when we save to ensure stage lint doesn't fail.
 
 ## Features
 
