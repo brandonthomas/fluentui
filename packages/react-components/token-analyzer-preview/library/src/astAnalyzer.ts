@@ -13,7 +13,7 @@ import {
 import { log, measure, measureAsync } from './debugUtils.js';
 import { analyzeImports, processImportedStringTokens, ImportedValue } from './importAnalyzer.js';
 import { extractTokensFromCssVars } from './cssVarTokenExtractor.js';
-import { extractTokensFromText, getPropertiesForShorthand, isTokenReference } from './tokenUtils';
+import { extractTokensFromText, getPropertiesForShorthand, isTokenReference } from './tokenUtils.js';
 
 const makeResetStylesToken = 'resetStyles';
 
@@ -209,7 +209,7 @@ function processStyleProperty(
         tokens.push({
           property,
           token: node.getText(),
-          path: basePath,
+          path: basePath.concat(property),
         });
       });
       return;
@@ -271,6 +271,7 @@ function processStyleProperty(
   } else if (Node.isSpreadAssignment(prop)) {
     processNode(prop.getExpression());
   }
+
   return tokens;
 }
 
@@ -347,7 +348,9 @@ function analyzeMergeClasses(sourceFile: SourceFile): StyleMapping[] {
  */
 function createStyleContent(tokens: TokenReference[]): StyleContent {
   const content: StyleContent = {
-    tokens: tokens.filter(t => t.path.length === 1),
+    tokens: tokens.filter(t => {
+      return t.path.length === 1;
+    }),
   };
 
   // Nested structures have paths longer than 1
