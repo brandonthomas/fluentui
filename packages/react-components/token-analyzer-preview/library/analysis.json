@@ -103,6 +103,15 @@
                   "path": []
                 }
               ]
+            },
+            "'@supports (-moz-appearance:button)'": {
+              "tokens": [
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.colorStrokeFocus2",
+                  "path": []
+                }
+              ]
             }
           },
           "isResetStyles": true,
@@ -403,6 +412,26 @@
               "path": ["backgroundColor"]
             },
             {
+              "property": "borderTopColor",
+              "token": "tokens.colorNeutralStrokeDisabled",
+              "path": ["borderTopColor"]
+            },
+            {
+              "property": "borderRightColor",
+              "token": "tokens.colorNeutralStrokeDisabled",
+              "path": ["borderRightColor"]
+            },
+            {
+              "property": "borderBottomColor",
+              "token": "tokens.colorNeutralStrokeDisabled",
+              "path": ["borderBottomColor"]
+            },
+            {
+              "property": "borderLeftColor",
+              "token": "tokens.colorNeutralStrokeDisabled",
+              "path": ["borderLeftColor"]
+            },
+            {
               "property": "color",
               "token": "tokens.colorNeutralForegroundDisabled",
               "path": ["color"]
@@ -426,6 +455,26 @@
                   "path": []
                 },
                 {
+                  "property": "borderTopColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderRightColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderBottomColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderLeftColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
                   "property": "color",
                   "token": "tokens.colorNeutralForegroundDisabled",
                   "path": []
@@ -442,6 +491,26 @@
                 {
                   "property": "backgroundColor",
                   "token": "tokens.colorNeutralBackgroundDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderTopColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderRightColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderBottomColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderLeftColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
                   "path": []
                 },
                 {
@@ -574,6 +643,110 @@
                 {
                   "property": "borderRadius",
                   "token": "tokens.borderRadiusNone",
+                  "path": []
+                }
+              ]
+            }
+          },
+          "assignedVariables": ["rootFocusStyles"]
+        },
+        "primary": {
+          "tokens": [],
+          "nested": {
+            ":focus": {
+              "tokens": [
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.shadow2",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.strokeWidthThin",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.colorStrokeFocus2",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.strokeWidthThick",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.colorNeutralForegroundOnBrand",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.shadow2",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.strokeWidthThin",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.colorStrokeFocus2",
+                  "path": []
+                },
+                {
+                  "property": "borderTopColor",
+                  "token": "tokens.colorStrokeFocus2",
+                  "path": []
+                },
+                {
+                  "property": "borderRightColor",
+                  "token": "tokens.colorStrokeFocus2",
+                  "path": []
+                },
+                {
+                  "property": "borderBottomColor",
+                  "token": "tokens.colorStrokeFocus2",
+                  "path": []
+                },
+                {
+                  "property": "borderLeftColor",
+                  "token": "tokens.colorStrokeFocus2",
+                  "path": []
+                }
+              ]
+            },
+            "'@supports (-moz-appearance:button)'": {
+              "tokens": [
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.shadow2",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.colorStrokeFocus2",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.strokeWidthThick",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.colorNeutralForegroundOnBrand",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.shadow2",
+                  "path": []
+                },
+                {
+                  "property": "boxShadow",
+                  "token": "tokens.colorStrokeFocus2",
                   "path": []
                 }
               ]
@@ -1146,6 +1319,26 @@
         "outline": {
           "tokens": [
             {
+              "property": "borderTopColor",
+              "token": "tokens.colorNeutralStroke1Selected",
+              "path": ["borderTopColor"]
+            },
+            {
+              "property": "borderRightColor",
+              "token": "tokens.colorNeutralStroke1Selected",
+              "path": ["borderRightColor"]
+            },
+            {
+              "property": "borderBottomColor",
+              "token": "tokens.colorNeutralStroke1Selected",
+              "path": ["borderBottomColor"]
+            },
+            {
+              "property": "borderLeftColor",
+              "token": "tokens.colorNeutralStroke1Selected",
+              "path": ["borderLeftColor"]
+            },
+            {
               "property": "color",
               "token": "tokens.colorNeutralForeground1Selected",
               "path": ["color"]
@@ -1169,6 +1362,26 @@
               "property": "backgroundColor",
               "token": "tokens.colorNeutralBackground1Selected",
               "path": ["backgroundColor"]
+            },
+            {
+              "property": "borderTopColor",
+              "token": "tokens.colorNeutralStroke1Selected",
+              "path": ["borderTopColor"]
+            },
+            {
+              "property": "borderRightColor",
+              "token": "tokens.colorNeutralStroke1Selected",
+              "path": ["borderRightColor"]
+            },
+            {
+              "property": "borderBottomColor",
+              "token": "tokens.colorNeutralStroke1Selected",
+              "path": ["borderBottomColor"]
+            },
+            {
+              "property": "borderLeftColor",
+              "token": "tokens.colorNeutralStroke1Selected",
+              "path": ["borderLeftColor"]
             },
             {
               "property": "color",
@@ -1537,6 +1750,26 @@
               "path": ["backgroundColor"]
             },
             {
+              "property": "borderTopColor",
+              "token": "tokens.colorNeutralStroke1",
+              "path": ["borderTopColor"]
+            },
+            {
+              "property": "borderRightColor",
+              "token": "tokens.colorNeutralStroke1",
+              "path": ["borderRightColor"]
+            },
+            {
+              "property": "borderBottomColor",
+              "token": "tokens.colorNeutralStroke1",
+              "path": ["borderBottomColor"]
+            },
+            {
+              "property": "borderLeftColor",
+              "token": "tokens.colorNeutralStroke1",
+              "path": ["borderLeftColor"]
+            },
+            {
               "property": "color",
               "token": "tokens.colorNeutralForeground1Selected",
               "path": ["color"]
@@ -1551,6 +1784,26 @@
                   "path": []
                 },
                 {
+                  "property": "borderTopColor",
+                  "token": "tokens.colorNeutralStroke1Hover",
+                  "path": []
+                },
+                {
+                  "property": "borderRightColor",
+                  "token": "tokens.colorNeutralStroke1Hover",
+                  "path": []
+                },
+                {
+                  "property": "borderBottomColor",
+                  "token": "tokens.colorNeutralStroke1Hover",
+                  "path": []
+                },
+                {
+                  "property": "borderLeftColor",
+                  "token": "tokens.colorNeutralStroke1Hover",
+                  "path": []
+                },
+                {
                   "property": "color",
                   "token": "tokens.colorNeutralForeground1Hover",
                   "path": []
@@ -1562,6 +1815,26 @@
                 {
                   "property": "backgroundColor",
                   "token": "tokens.colorNeutralBackground1Pressed",
+                  "path": []
+                },
+                {
+                  "property": "borderTopColor",
+                  "token": "tokens.colorNeutralStroke1Pressed",
+                  "path": []
+                },
+                {
+                  "property": "borderRightColor",
+                  "token": "tokens.colorNeutralStroke1Pressed",
+                  "path": []
+                },
+                {
+                  "property": "borderBottomColor",
+                  "token": "tokens.colorNeutralStroke1Pressed",
+                  "path": []
+                },
+                {
+                  "property": "borderLeftColor",
+                  "token": "tokens.colorNeutralStroke1Pressed",
                   "path": []
                 },
                 {
@@ -1580,6 +1853,26 @@
               "property": "backgroundColor",
               "token": "tokens.colorTransparentBackgroundSelected",
               "path": ["backgroundColor"]
+            },
+            {
+              "property": "borderTopColor",
+              "token": "tokens.colorNeutralStroke1",
+              "path": ["borderTopColor"]
+            },
+            {
+              "property": "borderRightColor",
+              "token": "tokens.colorNeutralStroke1",
+              "path": ["borderRightColor"]
+            },
+            {
+              "property": "borderBottomColor",
+              "token": "tokens.colorNeutralStroke1",
+              "path": ["borderBottomColor"]
+            },
+            {
+              "property": "borderLeftColor",
+              "token": "tokens.colorNeutralStroke1",
+              "path": ["borderLeftColor"]
             }
           ],
           "nested": {
@@ -1749,6 +2042,26 @@
               "path": ["backgroundColor"]
             },
             {
+              "property": "borderTopColor",
+              "token": "tokens.colorNeutralStrokeDisabled",
+              "path": ["borderTopColor"]
+            },
+            {
+              "property": "borderRightColor",
+              "token": "tokens.colorNeutralStrokeDisabled",
+              "path": ["borderRightColor"]
+            },
+            {
+              "property": "borderBottomColor",
+              "token": "tokens.colorNeutralStrokeDisabled",
+              "path": ["borderBottomColor"]
+            },
+            {
+              "property": "borderLeftColor",
+              "token": "tokens.colorNeutralStrokeDisabled",
+              "path": ["borderLeftColor"]
+            },
+            {
               "property": "color",
               "token": "tokens.colorNeutralForegroundDisabled",
               "path": ["color"]
@@ -1763,6 +2076,26 @@
                   "path": []
                 },
                 {
+                  "property": "borderTopColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderRightColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderBottomColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderLeftColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
                   "property": "color",
                   "token": "tokens.colorNeutralForegroundDisabled",
                   "path": []
@@ -1774,6 +2107,26 @@
                 {
                   "property": "backgroundColor",
                   "token": "tokens.colorNeutralBackgroundDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderTopColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderRightColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderBottomColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
+                  "path": []
+                },
+                {
+                  "property": "borderLeftColor",
+                  "token": "tokens.colorNeutralStrokeDisabled",
                   "path": []
                 },
                 {

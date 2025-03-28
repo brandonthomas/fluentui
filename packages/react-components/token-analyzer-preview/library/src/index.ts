@@ -49,7 +49,7 @@ async function analyzeProjectStyles(
 
     if (outputFile) {
       await measureAsync('write output file', async () => {
-        const formatted = format(JSON.stringify(results, null, 2), {
+        const formatted = format(JSON.stringify(sortObjectByKeys(results), null, 2), {
           parser: 'json',
           printWidth: 120,
           tabWidth: 2,
@@ -67,6 +67,21 @@ async function analyzeProjectStyles(
     error('Error during analysis:', err);
     throw err;
   }
+}
+
+/**
+ * Sorts an object by its keys alphabetically
+ *
+ * @param obj Object to sort
+ * @returns New object with the same properties, sorted by keys
+ */
+function sortObjectByKeys<T>(obj: Record<string, T>): Record<string, T> {
+  return Object.keys(obj)
+    .sort()
+    .reduce((sorted: Record<string, T>, key: string) => {
+      sorted[key] = obj[key];
+      return sorted;
+    }, {});
 }
 
 function countTokens(analysis: FileAnalysis): number {
