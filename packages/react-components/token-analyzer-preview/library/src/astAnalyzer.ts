@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { Project, Node, SourceFile, PropertyAssignment } from 'ts-morph';
+import { Project, Node, SourceFile, PropertyAssignment, SpreadAssignment } from 'ts-morph';
 import {
   TokenReference,
   StyleAnalysis,
@@ -13,6 +13,7 @@ import {
 import { log, measure, measureAsync } from './debugUtils.js';
 import { analyzeImports, processImportedStringTokens, ImportedValue } from './importAnalyzer.js';
 import { extractTokensFromCssVars } from './cssVarTokenExtractor.js';
+import { extractTokensFromText, getPropertiesForShorthand, isTokenReference } from './tokenUtils';
 
 const makeResetStylesToken = 'resetStyles';
 
@@ -32,17 +33,17 @@ interface VariableMapping {
  * Property names are derived from the actual CSS property in the path,
  * not the object key containing them.
  *
- * @param prop The property assignment to process
+ * @param prop The property assignment or spread element to process
  * @param importedValues Map of imported values for resolving token references
  * @param isResetStyles Whether this is a reset styles property
  */
 function processStyleProperty(
-  prop: PropertyAssignment,
+  prop: PropertyAssignment | SpreadAssignment,
   importedValues: Map<string, ImportedValue> | undefined = undefined,
   isResetStyles?: Boolean,
 ): TokenReference[] {
   const tokens: TokenReference[] = [];
-  const parentName = prop.getName();
+  const parentName = Node.isPropertyAssignment(prop) ? prop.getName() : '';
 
   function processNode(node?: Node, path: string[] = []): void {
     if (!node) {
@@ -50,7 +51,7 @@ function processStyleProperty(
     }
 
     // If we're processing a reset style, we need to add the parent name to the path
-    if (isResetStyles && path.length === 0) {
+    if (isResetStyles && path.length === 0 && parentName) {
       path.push(parentName);
     }
 
@@ -64,8 +65,8 @@ function processStyleProperty(
         tokens.push(...cssVarTokens);
       } else {
         // Check for direct token references
-        const matches = text.match(TOKEN_REGEX);
-        if (matches) {
+        const matches = extractTokensFromText(node);
+        if (matches.length > 0) {
           matches.forEach(match => {
             tokens.push({
               property: path[path.length - 1] || parentName,
@@ -79,8 +80,8 @@ function processStyleProperty(
       const text = node.getText();
 
       // First check if it matches the token regex directly
-      const matches = text.match(TOKEN_REGEX);
-      if (matches) {
+      const matches = extractTokensFromText(node);
+      if (matches.length > 0) {
         matches.forEach(match => {
           tokens.push({
             property: path[path.length - 1] || parentName,
@@ -103,7 +104,8 @@ function processStyleProperty(
       }
     } else if (Node.isPropertyAccessExpression(node)) {
       const text = node.getText();
-      if (text.startsWith('tokens.')) {
+      const isToken = isTokenReference(text);
+      if (isToken) {
         tokens.push({
           property: path[path.length - 1] || parentName,
           token: text,
@@ -115,8 +117,14 @@ function processStyleProperty(
         if (Node.isPropertyAssignment(childProp)) {
           const childName = childProp.getName();
           processNode(childProp.getInitializer(), [...path, childName]);
+        } else if (Node.isSpreadAssignment(childProp)) {
+          // Handle spread elements in object literals
+          processNode(childProp.getExpression(), path);
         }
       });
+    } else if (Node.isSpreadAssignment(node)) {
+      // Handle spread elements
+      processNode(node.getExpression(), path);
     } else if (Node.isCallExpression(node) && node.getExpression().getText() === 'createCustomFocusIndicatorStyle') {
       const focus = `:focus`;
       const focusWithin = `:focus-within`;
@@ -150,39 +158,119 @@ function processStyleProperty(
         });
       }
     } else if (Node.isCallExpression(node)) {
-      // Generic handling of functions that are not whitelisted - stored passed tokens under function name
+      // Process calls like shorthands.borderColor(tokens.color)
       const functionName = node.getExpression().getText();
-      node.getArguments().forEach(argument => {
-        if (Node.isObjectLiteralExpression(argument)) {
-          argument.getProperties().forEach(property => {
-            if (Node.isPropertyAssignment(property)) {
-              const childName = property.getName();
-              processNode(property.getInitializer(), [...path, functionName, childName]);
-            }
-          });
-        }
-        // Check for string literals in function arguments that might contain CSS variables with tokens
-        if (Node.isStringLiteral(argument)) {
-          const text = argument.getText().replace(/['"]/g, '');
-          if (text.includes('var(')) {
-            const cssVarTokens = extractTokensFromCssVars(
-              text,
-              path[path.length - 1] || parentName,
-              [...path, functionName],
-              TOKEN_REGEX,
-            );
-            tokens.push(...cssVarTokens);
+      // we should pass the number of arguments so we can properly map which overload is being called.
+      const affectedProperties = getPropertiesForShorthand(functionName);
+
+      if (affectedProperties.length > 0) {
+        // Process each argument and apply it to all affected properties
+        node.getArguments().forEach(argument => {
+          processNodeForAffectedProperties(argument, affectedProperties, path);
+        });
+      } else {
+        // Generic handling of functions that are not whitelisted
+        node.getArguments().forEach(argument => {
+          if (Node.isObjectLiteralExpression(argument)) {
+            argument.getProperties().forEach(property => {
+              if (Node.isPropertyAssignment(property)) {
+                const childName = property.getName();
+                processNode(property.getInitializer(), [...path, functionName, childName]);
+              }
+            });
           }
-        }
-      });
+          // Check for string literals in function arguments that might contain CSS variables with tokens
+          if (Node.isStringLiteral(argument)) {
+            const text = argument.getText().replace(/['"]/g, '');
+            if (text.includes('var(')) {
+              const cssVarTokens = extractTokensFromCssVars(
+                text,
+                path[path.length - 1] || parentName,
+                [...path, functionName],
+                TOKEN_REGEX,
+              );
+              tokens.push(...cssVarTokens);
+            }
+          }
+        });
+      }
     }
   }
 
-  const initializer = prop.getInitializer();
-  if (initializer) {
-    processNode(initializer);
+  // Helper function to process nodes for multiple affected properties
+  function processNodeForAffectedProperties(node: Node, properties: string[], basePath: string[]): void {
+    if (!node) {
+      return;
+    }
+
+    // If this is a direct token reference
+    if (Node.isPropertyAccessExpression(node) && isTokenReference(node)) {
+      properties.forEach(property => {
+        tokens.push({
+          property,
+          token: node.getText(),
+          path: basePath,
+        });
+      });
+      return;
+    }
+
+    // If this is an identifier that might be a variable
+    if (Node.isIdentifier(node) && importedValues && importedValues.has(node.getText())) {
+      properties.forEach(property => {
+        const importTokens = processImportedStringTokens(
+          importedValues,
+          property,
+          node.getText(),
+          basePath,
+          TOKEN_REGEX,
+        );
+        tokens.push(...importTokens);
+      });
+      return;
+    }
+
+    // For other node types, process them normally but with each property
+    if (Node.isStringLiteral(node) || Node.isTemplateExpression(node)) {
+      const text = node.getText().replace(/['"]/g, '');
+
+      // Check for tokens in the text
+      const matches = extractTokensFromText(node);
+      if (matches.length > 0) {
+        properties.forEach(property => {
+          matches.forEach(match => {
+            tokens.push({
+              property,
+              token: match,
+              path: basePath,
+            });
+          });
+        });
+      }
+
+      // Check for CSS vars
+      if (text.includes('var(')) {
+        properties.forEach(property => {
+          const cssVarTokens = extractTokensFromCssVars(text, property, basePath, TOKEN_REGEX);
+          tokens.push(...cssVarTokens);
+        });
+      }
+    }
+
+    // For any other complex expressions, process them normally
+    else {
+      processNode(node, basePath);
+    }
   }
 
+  if (Node.isPropertyAssignment(prop)) {
+    const initializer = prop.getInitializer();
+    if (initializer) {
+      processNode(initializer);
+    }
+  } else if (Node.isSpreadAssignment(prop)) {
+    processNode(prop.getExpression());
+  }
   return tokens;
 }
 
@@ -430,8 +518,6 @@ async function analyzeFile(filePath: string, project: Project): Promise<FileAnal
   // First analyze imports to find imported string values
   log('Analyzing imports to find imported token values');
   const importedValues = await measureAsync('analyze imports', () => analyzeImports(sourceFile, project));
-
-  console.log(importedValues);
 
   // Second pass: Analyze mergeClasses
   const styleMappings = measure('analyze mergeClasses', () => analyzeMergeClasses(sourceFile));

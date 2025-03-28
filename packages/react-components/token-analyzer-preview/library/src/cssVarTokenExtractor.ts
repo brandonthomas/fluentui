@@ -1,6 +1,7 @@
 // cssVarTokenExtractor.ts
 import { log } from './debugUtils.js';
 import { TokenReference } from './types.js';
+import { extractTokensFromText } from './tokenUtils.js';
 
 /**
  * Extracts token references from CSS variable syntax including nested fallback chains
@@ -23,8 +24,8 @@ export function extractTokensFromCssVars(
   let testValue = value;
 
   // Direct token matches in the string
-  const directMatches = testValue.match(TOKEN_REGEX);
-  if (directMatches) {
+  const directMatches = extractTokensFromText(testValue);
+  if (directMatches.length > 0) {
     directMatches.forEach(match => {
       testValue = testValue.replace(match, ''); // Remove direct matches from the string
       tokens.push({
@@ -52,8 +53,8 @@ export function extractTokensFromCssVars(
     log(`  - Fallback: ${fallback}`);
 
     // Check if the variable name contains a token reference
-    const varNameTokens = varName.match(TOKEN_REGEX);
-    if (varNameTokens) {
+    const varNameTokens = extractTokensFromText(varName);
+    if (varNameTokens.length > 0) {
       varNameTokens.forEach(token => {
         tokens.push({
           property: propertyName,
@@ -71,8 +72,8 @@ export function extractTokensFromCssVars(
         tokens.push(...fallbackTokens);
       } else {
         // Check for direct token references in the fallback
-        const fallbackTokens = fallback.match(TOKEN_REGEX);
-        if (fallbackTokens) {
+        const fallbackTokens = extractTokensFromText(fallback);
+        if (fallbackTokens.length > 0) {
           fallbackTokens.forEach(token => {
             tokens.push({
               property: propertyName,

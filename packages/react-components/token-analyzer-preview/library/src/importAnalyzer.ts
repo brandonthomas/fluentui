@@ -1,9 +1,10 @@
 // importAnalyzer.ts
 import { Project, Node, SourceFile, ImportDeclaration, Symbol, TypeChecker, SyntaxKind } from 'ts-morph';
 import { log } from './debugUtils.js';
-import { TokenReference } from './types.js';
+import { TokenReference, TOKEN_REGEX } from './types.js';
 import { getModuleSourceFile } from './moduleResolver.js';
 import { extractTokensFromCssVars } from './cssVarTokenExtractor.js';
+import { isTokenReference, extractTokensFromText } from './tokenUtils.js';
 
 /**
  * Represents a portion of a template expression
@@ -23,10 +24,9 @@ export interface ImportedValue {
   sourceFile: string;
   isLiteral: boolean;
 
-  // Enhanced fields for recursive resolution
+  // Enhanced fields for template processing
   templateSpans?: TemplateSpan[]; // For template expressions with spans
   resolvedTokens?: TokenReference[]; // Pre-extracted tokens from this value
-  visitedChain?: string[]; // Track resolution chain to prevent cycles
 }
 
 /**
@@ -269,12 +269,11 @@ function extractValueFromDeclaration(
 }
 
 /**
- * Extract value from an expression node with enhanced template literal handling and recursion
+ * Extract value from an expression node with enhanced template literal handling
  */
 function extractValueFromExpression(
   expression: Node | undefined,
   typeChecker: TypeChecker,
-  visitedNodes: Set<string> = new Set(),
 ):
   | {
       value: string;
@@ -285,20 +284,6 @@ function extractValueFromExpression(
   if (!expression) {
     return undefined;
   }
-
-  // Create a unique key for this expression to prevent infinite recursion
-  const expressionKey = `${expression.getSourceFile().getFilePath()}:${expression.getPos()}`;
-  if (visitedNodes.has(expressionKey)) {
-    log(`Skipping already visited expression: ${expressionKey}`);
-    return {
-      value: expression.getText(),
-      isLiteral: false,
-    };
-  }
-
-  // Add to visited nodes to prevent cycles
-  const newVisited = new Set(visitedNodes);
-  newVisited.add(expressionKey);
 
   if (Node.isStringLiteral(expression)) {
     return {
@@ -329,7 +314,7 @@ function extractValueFromExpression(
       const literal = span.getLiteral().getLiteralText();
 
       // Handle different types of expressions in template spans
-      if (Node.isPropertyAccessExpression(spanExpr) && spanText.startsWith('tokens.')) {
+      if (Node.isPropertyAccessExpression(spanExpr) && isTokenReference(spanExpr)) {
         // Direct token reference in template span
         templateSpans.push({
           text: spanText,
@@ -348,7 +333,7 @@ function extractValueFromExpression(
         fullValue += spanText;
       } else {
         // Other expression types - try to resolve recursively
-        const resolvedExpr = extractValueFromExpression(spanExpr, typeChecker, newVisited);
+        const resolvedExpr = extractValueFromExpression(spanExpr, typeChecker);
         if (resolvedExpr) {
           if (resolvedExpr.templateSpans) {
             // If it has its own spans, include them
@@ -413,7 +398,7 @@ function extractValueFromExpression(
       const initializer = decl.getInitializer();
       if (initializer) {
         // Recursively resolve the initializer
-        return extractValueFromExpression(initializer, typeChecker, newVisited);
+        return extractValueFromExpression(initializer, typeChecker);
       }
     }
 
@@ -439,27 +424,16 @@ function extractValueFromExpression(
 }
 
 /**
- * Process string tokens in imported values with enhanced recursive resolution
+ * Process string tokens in imported values
  */
 export function processImportedStringTokens(
   importedValues: Map<string, ImportedValue>,
   propertyName: string,
   value: string,
   path: string[] = [],
-  TOKEN_REGEX: RegExp,
-  visited: Set<string> = new Set(),
+  tokenRegex: RegExp = TOKEN_REGEX,
 ): TokenReference[] {
   const tokens: TokenReference[] = [];
-
-  // Prevent infinite recursion with cycle detection
-  if (visited.has(value)) {
-    log(`Skipping circular reference: ${value}`);
-    return tokens;
-  }
-
-  // Create a new set with the current value added
-  const newVisited = new Set(visited);
-  newVisited.add(value);
 
   // Check if the value is an imported value reference
   if (importedValues.has(value)) {
@@ -494,13 +468,12 @@ export function processImportedStringTokens(
               propertyName,
               span.referenceName,
               path,
-              TOKEN_REGEX,
-              newVisited,
+              tokenRegex,
             );
             tokens.push(...spanTokens);
           } else if (span.text.includes('var(')) {
             // Check for CSS variables in the span text
-            const cssVarTokens = extractTokensFromCssVars(span.text, propertyName, path, TOKEN_REGEX);
+            const cssVarTokens = extractTokensFromCssVars(span.text, propertyName, path, tokenRegex);
             cssVarTokens.forEach(token => {
               tokens.push({
                 ...token,
@@ -510,8 +483,8 @@ export function processImportedStringTokens(
             });
           } else {
             // Check for direct token matches in non-reference spans
-            const matches = span.text.match(TOKEN_REGEX);
-            if (matches) {
+            const matches = extractTokensFromText(span.text);
+            if (matches.length > 0) {
               matches.forEach(match => {
                 tokens.push({
                   property: propertyName,
@@ -527,8 +500,8 @@ export function processImportedStringTokens(
       } else {
         // Standard processing for literals without spans
         // First, check for direct token references
-        const matches = importedValue.value.match(TOKEN_REGEX);
-        if (matches) {
+        const matches = extractTokensFromText(importedValue.value);
+        if (matches.length > 0) {
           matches.forEach(match => {
             tokens.push({
               property: propertyName,
@@ -540,7 +513,7 @@ export function processImportedStringTokens(
           });
         } else if (importedValue.value.includes('var(')) {
           // Then check for CSS variable patterns
-          const cssVarTokens = extractTokensFromCssVars(importedValue.value, propertyName, path, TOKEN_REGEX);
+          const cssVarTokens = extractTokensFromCssVars(importedValue.value, propertyName, path, tokenRegex);
           cssVarTokens.forEach(token => {
             tokens.push({
               ...token,
@@ -552,7 +525,7 @@ export function processImportedStringTokens(
       }
     } else {
       // Non-literal values (like property access expressions)
-      if (importedValue.value.match(TOKEN_REGEX)) {
+      if (isTokenReference(importedValue.value)) {
         tokens.push({
           property: propertyName,
           token: importedValue.value,
@@ -562,8 +535,8 @@ export function processImportedStringTokens(
         });
       } else {
         // Check for any token references in the value
-        const matches = importedValue.value.match(TOKEN_REGEX);
-        if (matches) {
+        const matches = extractTokensFromText(importedValue.value);
+        if (matches.length > 0) {
           matches.forEach(match => {
             tokens.push({
               property: propertyName,
